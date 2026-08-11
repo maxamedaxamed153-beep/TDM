@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDM ARENA — PUBGM Tournament Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Rubik:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e0a;
+    --bg-2:#0d130e;
+    --panel:#131a13;
+    --panel-2:#181f18;
+    --line:#28312a;
+    --line-soft:#1e261f;
+    --gold:#d9a83c;
+    --gold-dim:#8a7031;
+    --silver:#c3ccd2;
+    --silver-dim:#6f7880;
+    --bronze:#c67c40;
+    --bronze-dim:#7a4d2a;
+    --olive:#8a9c5e;
+    --live:#d1442f;
+    --text:#eef0e6;
+    --muted:#93a08e;
+    --muted-2:#5f6b5c;
+    --radius:2px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:
+      radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(217,168,60,0.07), transparent 60%),
+      linear-gradient(180deg, var(--bg-2), var(--bg) 400px);
+    color:var(--text);
+    font-family:'Rubik', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+
+  .display{font-family:'Rajdhani',sans-serif; letter-spacing:0.02em;}
+  .mono{font-family:'Share Tech Mono', monospace;}
+
+  a{color:inherit; text-decoration:none;}
+  ::selection{background:var(--gold); color:#141a13;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  /* ---------- utility icon svg ---------- */
+  .icon{width:1em; height:1em; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; vertical-align:-0.15em;}
+  .icon.filled{fill:currentColor; stroke:none;}
+
+  /* ---------- angled panel clip ---------- */
+  .clip-panel{ clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
+  .clip-panel-sm{ clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+
+  /* ================= HEADER ================= */
+  header.topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px;
+    background:rgba(10,14,10,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px; height:34px; display:grid; place-items:center;
+    background:linear-gradient(135deg, var(--gold), var(--bronze));
+    color:#141a13;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    font-weight:700;
+  }
+  .brand-mark .icon{width:18px; height:18px; stroke-width:2.2;}
+  .brand-text .t1{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:19px; letter-spacing:0.06em; line-height:1;}
+  .brand-text .t2{font-size:9px; letter-spacing:0.22em; color:var(--muted-2); text-transform:uppercase; margin-top:3px;}
+
+  nav.tabs{display:flex; gap:4px; background:var(--panel); border:1px solid var(--line); padding:4px; border-radius:3px;}
+  nav.tabs button{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:0.04em;
+    color:var(--muted); background:transparent; border:none; padding:8px 16px; cursor:pointer;
+    display:flex; align-items:center; gap:7px; border-radius:2px; transition:all .18s ease;
+  }
+  nav.tabs button .icon{width:15px; height:15px;}
+  nav.tabs button.active{background:var(--gold); color:#141a13;}
+  nav.tabs button:not(.active):hover{color:var(--text); background:var(--panel-2);}
+
+  main{max-width:1080px; margin:0 auto; padding:0 20px;}
+
+  .view{display:none; animation:fadeIn .35s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ================= SECTION HEADINGS ================= */
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; margin:38px 0 16px;}
+  .sec-head .left{display:flex; align-items:center; gap:10px;}
+  .sec-head .bar{width:4px; height:22px; background:var(--gold);}
+  .sec-head h2{font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase;}
+  .sec-head .count{font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--muted-2); border:1px solid var(--line); padding:3px 8px; border-radius:2px;}
+
+  /* ================= HERO ================= */
+  .hero{
+    margin-top:24px;
+    position:relative;
+    background:
+      radial-gradient(600px 240px at 85% 0%, rgba(217,168,60,0.13), transparent 70%),
+      linear-gradient(160deg, var(--panel-2), var(--panel) 60%);
+    border:1px solid var(--line);
+    padding:28px 26px;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 46px);
+    pointer-events:none;
+  }
+  .hero-scope{
+    position:absolute; right:-40px; top:50%; transform:translateY(-50%);
+    width:260px; height:260px; opacity:0.07; pointer-events:none;
+  }
+  .live-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(209,68,47,0.15); border:1px solid var(--live); color:#ff8770;
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:0.12em;
+    padding:5px 10px; text-transform:uppercase;
+  }
+  .live-dot{width:6px; height:6px; border-radius:50%; background:var(--live); animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.25;}}
+
+  .hero h1{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:clamp(28px,4.4vw,42px);
+    letter-spacing:0.01em; margin-top:14px; text-transform:uppercase; line-height:1.05; max-width:640px;
+  }
+  .hero p.sub{color:var(--muted); margin-top:8px; font-size:14.5px; max-width:520px;}
+
+  .hero-stats{display:flex; flex-wrap:wrap; gap:26px; margin-top:24px; position:relative;}
+  .hstat{min-width:90px;}
+  .hstat .v{font-family:'Share Tech Mono',monospace; font-size:22px; color:var(--gold);}
+  .hstat .l{font-size:10.5px; color:var(--muted-2); letter-spacing:0.1em; text-transform:uppercase; margin-top:2px;}
+
+  /* ================= MATCH GRID ================= */
+  .match-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px;}
+  .match-card{
+    background:var(--panel); border:1px solid var(--line); padding:16px;
+    position:relative; transition:border-color .2s ease, transform .2s ease;
+  }
+  .match-card:hover{border-color:var(--gold-dim); transform:translateY(-2px);}
+  .match-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .status-pill{
+    font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase;
+    padding:3px 8px; border:1px solid;
+  }
+  .status-pill.live{color:#ff8770; border-color:var(--live); background:rgba(209,68,47,0.12);}
+  .status-pill.soon{color:var(--olive); border-color:var(--olive); background:rgba(138,156,94,0.1);}
+  .map-tag{font-size:11px; color:var(--muted-2); display:flex; align-items:center; gap:5px;}
+
+  .match-teams{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .mteam{display:flex; align-items:center; gap:9px; flex:1;}
+  .mteam.right{flex-direction:row-reverse; text-align:right;}
+  .team-badge{
+    width:34px; height:34px; display:grid; place-items:center; flex:none;
+    background:var(--panel-2); border:1px solid var(--line);
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13px; color:var(--gold);
+    clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
+  }
+  .team-name{font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14.5px;}
+  .score{font-family:'Share Tech Mono',monospace; font-size:24px; color:var(--text); padding:0 10px;}
+  .score.win{color:var(--gold);}
+
+  .match-foot{display:flex; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:11.5px; color:var(--muted-2);}
+  .match-foot span{display:flex; align-items:center; gap:5px;}
+
+  /* ================= PODIUM ================= */
+  .podium-wrap{
+    display:grid; grid-template-columns:1fr 1fr 1fr; align-items:end; gap:14px; margin-top:6px;
+  }
+  .p-card{
+    position:relative; background:var(--panel); border:1px solid var(--line); padding:20px 14px 18px;
+    text-align:center;
+  }
+  .p-card.rank1{ order:2; border-color:var(--gold-dim); padding-top:28px; background:linear-gradient(180deg, rgba(217,168,60,0.09), var(--panel) 70%); }
+  .p-card.rank2{ order:1; border-color:var(--silver-dim); }
+  .p-card.rank3{ order:3; border-color:var(--bronze-dim); }
+
+  .p-frame{
+    width:78px; height:78px; margin:0 auto 12px; position:relative; display:grid; place-items:center;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .rank1 .p-frame{width:96px; height:96px; background:linear-gradient(160deg, var(--gold), #6f5a20);}
+  .rank2 .p-frame{background:linear-gradient(160deg, var(--silver), #4b525a);}
+  .rank3 .p-frame{background:linear-gradient(160deg, var(--bronze), #5a381f);}
+  .p-frame-inner{
+    width:calc(100% - 5px); height:calc(100% - 5px); background:var(--bg-2);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display:grid; place-items:center; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:22px; color:var(--text);
+  }
+  .rank1 .p-frame-inner{font-size:27px; color:var(--gold);}
+
+  .p-rankno{
+    position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:0.1em;
+    background:var(--bg); border:1px solid var(--line); padding:2px 9px; color:var(--muted);
+  }
+  .rank1 .p-rankno{color:var(--gold); border-color:var(--gold-dim);}
+  .rank2 .p-rankno{color:var(--silver); border-color:var(--silver-dim);}
+  .rank3 .p-rankno{color:var(--bronze); border-color:var(--bronze-dim);}
+
+  .p-name{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:17px; letter-spacing:0.02em; margin-top:2px;}
+  .rank1 .p-name{font-size:19px;}
+  .p-team{font-size:11px; color:var(--muted-2); margin-top:2px;}
+  .p-stats{display:flex; justify-content:center; gap:16px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft);}
+  .p-stats div{text-align:center;}
+  .p-stats .v{font-family:'Share Tech Mono',monospace; font-size:15px; color:var(--text);}
+  .p-stats .l{font-size:9px; color:var(--muted-2); letter-spacing:0.08em; text-transform:uppercase; margin-top:1px;}
+
+  /* ================= HISTORY VIEW ================= */
+  .switcher{display:inline-flex; background:var(--panel); border:1px solid var(--line); padding:4px; margin-bottom:18px;}
+  .switcher button{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:0.03em;
+    color:var(--muted); background:transparent; border:none; padding:9px 22px; cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:all .18s ease;
+  }
+  .switcher button.active{background:var(--olive); color:#12160f;}
+  .switcher button .icon{width:15px; height:15px;}
+
+  .rank-table{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line);}
+  .rank-table thead th{
+    text-align:left; font-family:'Share Tech Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--muted-2); padding:12px 14px; border-bottom:1px solid var(--line); background:var(--panel-2);
+  }
+  .rank-table tbody td{padding:12px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px;}
+  .rank-table tbody tr:last-child td{border-bottom:none;}
+  .rank-table tbody tr:hover{background:var(--panel-2);}
+  .rt-rank{font-family:'Share Tech Mono',monospace; color:var(--muted); width:38px;}
+  .rt-rank.top1{color:var(--gold);} .rt-rank.top2{color:var(--silver);} .rt-rank.top3{color:var(--bronze);}
+  .rt-entity{display:flex; align-items:center; gap:10px; font-family:'Rajdhani',sans-serif; font-weight:600; font-size:15px;}
+  .rt-avatar{
+    width:28px; height:28px; display:grid; place-items:center; flex:none; font-size:11px; font-weight:700;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--gold);
+    clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
+  }
+  .rt-num{font-family:'Share Tech Mono',monospace; text-align:right;}
+  .rt-sub{color:var(--muted-2); font-size:11.5px;}
+
+  .table-scroll{overflow-x:auto;}
+  .table-scroll .rank-table{min-width:640px;}
+
+  /* past tournaments accordion */
+  .hist-list{display:flex; flex-direction:column; gap:10px;}
+  .hist-item{background:var(--panel); border:1px solid var(--line);}
+  .hist-head{
+    display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; gap:12px;
+  }
+  .hist-head:hover{background:var(--panel-2);}
+  .hist-left{display:flex; align-items:center; gap:14px; min-width:0;}
+  .hist-badge{
+    width:38px; height:38px; flex:none; display:grid; place-items:center;
+    background:var(--panel-2); border:1px solid var(--gold-dim); color:var(--gold);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .hist-title{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15.5px;}
+  .hist-meta{font-size:11.5px; color:var(--muted-2); margin-top:2px; display:flex; gap:12px; flex-wrap:wrap;}
+  .hist-meta span{display:flex; align-items:center; gap:4px;}
+  .hist-winner{
+    font-family:'Share Tech Mono',monospace; font-size:11.5px; color:var(--gold); text-align:right; flex:none;
+    display:flex; align-items:center; gap:6px;
+  }
+  .chev{transition:transform .2s ease; flex:none; color:var(--muted-2);}
+  .hist-item.open .chev{transform:rotate(90deg);}
+  .hist-body{max-height:0; overflow:hidden; transition:max-height .28s ease;}
+  .hist-body-in{padding:2px 16px 16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; border-top:1px solid var(--line-soft);}
+  .hist-stat{padding-top:12px;}
+  .hist-stat .v{font-family:'Share Tech Mono',monospace; font-size:15px; color:var(--text);}
+  .hist-stat .l{font-size:10px; color:var(--muted-2); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;}
+
+  footer{max-width:1080px; margin:50px auto 0; padding:20px; border-top:1px solid var(--line-soft); color:var(--muted-2); font-size:11.5px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
+
+  @media (max-width:720px){
+    header.topbar{padding:12px 14px;}
+    nav.tabs button span.label{display:none;}
+    nav.tabs button{padding:9px 12px;}
+    .podium-wrap{grid-template-columns:1fr; gap:10px;}
+    .p-card.rank1, .p-card.rank2, .p-card.rank3{order:0;}
+    main{padding:0 14px;}
+    .hero{padding:22px 18px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="t1">TDM ARENA</div>
+      <div class="t2">PUBGM Tournament Hub</div>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="home">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      <span class="label">Guriga</span>
+    </button>
+    <button class="tab-btn" data-view="history">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 5v5h5"/><path d="M12 7v5l3 3"/></svg>
+      <span class="label">Taariikhda</span>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ================= HOME VIEW ================= -->
+  <section id="home" class="view active">
+
+    <div class="hero clip-panel">
+      <svg class="hero-scope" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="0.6">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1"/>
+        <path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+      </svg>
+      <span class="live-pill"><span class="live-dot"></span>Tartanka Toos ah</span>
+      <h1 id="hero-title">PUBGM TDM Championship — Wareegga 04</h1>
+      <p class="sub" id="hero-sub">Tartanka koleyga TDM ee ugu weyn xilliga — 32 kooxood oo iska soo horjeeda si ay ugu heleen koobka wareegga afraad.</p>
+      <div class="hero-stats">
+        <div class="hstat"><div class="v" id="stat-teams">—</div><div class="l">Kooxood</div></div>
+        <div class="hstat"><div class="v" id="stat-countdown">—</div><div class="l">Wakhtiga Hadhaya</div></div>
+        <div class="hstat"><div class="v" id="stat-prize">—</div><div class="l">Abaalmarinta</div></div>
+        <div class="hstat"><div class="v" id="stat-map">—</div><div class="l">Khariidad Xiga</div></div>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div class="left"><span class="bar"></span><h2>Ciyaaraha Dhacaya</h2></div>
+      <span class="count mono" id="match-count">0 KULAN</span>
+    </div>
+
+    <!-- Match cards are rendered dynamically by JS below, using the exact same
+         .match-card / .match-top / .match-teams / .match-foot markup & classes -->
+    <div class="match-grid" id="match-grid"></div>
+
+    <div class="sec-head">
+      <div class="left"><span class="bar"></span><h2>Saddexda Ugu Sarreeya</h2></div>
+      <span class="count mono">TOP 3</span>
+    </div>
+
+    <!-- Podium cards rendered dynamically -->
+    <div class="podium-wrap" id="podium-wrap"></div>
+
+  </section>
+
+  <!-- ================= HISTORY VIEW ================= -->
+  <section id="history" class="view">
+
+    <div class="sec-head" style="margin-top:28px;">
+      <div class="left"><span class="bar"></span><h2>Kartiga Guud</h2></div>
+    </div>
+
+    <div class="switcher">
+      <button class="sw-btn active" data-sub="solo">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+        Solo
+      </button>
+      <button class="sw-btn" data-sub="team">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M13 14c2.8 0 6 2.7 6 6"/></svg>
+        Team
+      </button>
+    </div>
+
+    <div id="sub-solo" class="sub-view">
+      <div class="table-scroll">
+        <table class="rank-table">
+          <thead>
+            <tr><th>#</th><th>Ciyaartoy</th><th style="text-align:right;">Kills</th><th style="text-align:right;">K/D</th><th style="text-align:right;">MVP</th><th style="text-align:right;">Tartamo</th></tr>
+          </thead>
+          <tbody id="solo-tbody">
+            <!-- rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="sub-team" class="sub-view" style="display:none;">
+      <div class="table-scroll">
+        <table class="rank-table">
+          <thead>
+            <tr><th>#</th><th>Kooxda</th><th style="text-align:right;">Guushii</th><th style="text-align:right;">Kills Guud</th><th style="text-align:right;">Dhibco</th><th style="text-align:right;">Tartamo</th></tr>
+          </thead>
+          <tbody id="team-tbody">
+            <!-- rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <div class="left"><span class="bar"></span><h2>Tartammadii Hore</h2></div>
+      <span class="count mono" id="hist-count">0 TARTAMO</span>
+    </div>
+
+    <!-- Accordion items rendered dynamically -->
+    <div class="hist-list" id="hist-list"></div>
+
+  </section>
+
+</main>
+
+<footer>
+  <span>TDM ARENA © 2026</span>
+  <span>Xogta lagu soo bandhigay waxay ka imaanaysaa Firebase Firestore — si toos ah ayay u cusboonaysiinaysaa</span>
+</footer>
+
+<script>
+  // Home / History tab switching
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const views = document.querySelectorAll('.view');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.getAttribute('data-view');
+      views.forEach(v => v.classList.toggle('active', v.id === target));
+    });
+  });
+
+  // Solo / Team switcher
+  const swBtns = document.querySelectorAll('.sw-btn');
+  swBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      swBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.getAttribute('data-sub');
+      document.getElementById('sub-solo').style.display = target === 'solo' ? 'block' : 'none';
+      document.getElementById('sub-team').style.display = target === 'team' ? 'block' : 'none';
+    });
+  });
+
+  // Past tournaments accordion — delegated so it works for dynamically rendered items
+  document.getElementById('hist-list').addEventListener('click', (e) => {
+    const head = e.target.closest('[data-toggle]');
+    if (!head) return;
+    const item = head.closest('.hist-item');
+    const body = item.querySelector('.hist-body');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.hist-item.open').forEach(o => {
+      if (o !== item){ o.classList.remove('open'); o.querySelector('.hist-body').style.maxHeight = null; }
+    });
+    if (isOpen){
+      item.classList.remove('open');
+      body.style.maxHeight = null;
+    } else {
+      item.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+</script>
+
+<!-- ================= FIREBASE INTEGRATION ================= -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import {
+    getFirestore, collection, getDocs, onSnapshot,
+    query, orderBy, doc, onSnapshot as onDocSnapshot
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC64H11C2iFqzikCPrlIhsXxVkfVNQhYq8",
+    authDomain: "uc-store-6609b.firebaseapp.com",
+    projectId: "uc-store-6609b",
+    storageBucket: "uc-store-6609b.firebasestorage.app",
+    messagingSenderId: "852223956045",
+    appId: "1:852223956045:web:477bf484e5de011f383804"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ---------- small helpers ----------
+  const el = (tag, cls, html) => {
+    const e = document.createElement('div');
+    e.className = cls || '';
+    if (html !== undefined) e.innerHTML = html;
+    return tag === 'div' ? e : (() => { const r = document.createElement(tag); r.className = cls || ''; if (html !== undefined) r.innerHTML = html; return r; })();
+  };
+  const fmtMoney = (n) => '$' + Number(n || 0).toLocaleString('en-US');
+  const initials = (name) => (name || '??').split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+
+  // ==========================================================
+  // 1) HERO STATS  -> collection: tournamentMeta, doc: "current"
+  // ==========================================================
+  let countdownTargetMs = null;
+  let countdownTimer = null;
+
+  onDocSnapshot(doc(db, 'tournamentMeta', 'current'), (snap) => {
+    if (!snap.exists()) return;
+    const d = snap.data();
+
+    document.getElementById('stat-teams').textContent = d.activeTeams ?? '—';
+    document.getElementById('stat-prize').textContent = fmtMoney(d.prizePool);
+    document.getElementById('stat-map').textContent = d.nextMap ?? '—';
+    if (d.title) document.getElementById('hero-title').textContent = d.title;
+    if (d.subtitle) document.getElementById('hero-sub').textContent = d.subtitle;
+
+    // countdownTarget is expected to be a Firestore Timestamp
+    if (d.countdownTarget && typeof d.countdownTarget.toMillis === 'function') {
+      countdownTargetMs = d.countdownTarget.toMillis();
+      startCountdown();
+    }
+  });
+
+  function startCountdown(){
+    if (countdownTimer) clearInterval(countdownTimer);
+    const tick = () => {
+      const el = document.getElementById('stat-countdown');
+      let diff = countdownTargetMs - Date.now();
+      if (diff <= 0) { el.textContent = '00:00:00'; clearInterval(countdownTimer); return; }
+      const h = Math.floor(diff / 3600000);
+      diff -= h * 3600000;
+      const m = Math.floor(diff / 60000);
+      diff -= m * 60000;
+      const s = Math.floor(diff / 1000);
+      const pad = (n) => String(n).padStart(2, '0');
+      el.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    };
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  }
+
+  // ==========================================================
+  // 2) MATCH GRID (real-time)  -> collection: matches
+  //    fields: teamA{name,badge}, teamB{name,badge}, scoreA, scoreB,
+  //            status ('live'|'soon'), map, round, eta ('05:47' or a time string), order
+  // ==========================================================
+  const matchesQ = query(collection(db, 'matches'), orderBy('order', 'asc'));
+  onSnapshot(matchesQ, (snap) => {
+    const grid = document.getElementById('match-grid');
+    grid.innerHTML = '';
+    document.getElementById('match-count').textContent = `${snap.size} KULAN`;
+
+    snap.forEach((docSnap) => {
+      const m = docSnap.data();
+      const isLive = m.status === 'live';
+      const aWins = Number(m.scoreA) > Number(m.scoreB);
+      const bWins = Number(m.scoreB) > Number(m.scoreA);
+      const hasScore = m.scoreA !== undefined && m.scoreA !== null && m.scoreA !== '';
+
+      const card = document.createElement('div');
+      card.className = 'match-card';
+      card.innerHTML = `
+        <div class="match-top">
+          <span class="status-pill ${isLive ? 'live' : 'soon'}">
+            ${isLive ? '<span class="live-dot" style="display:inline-block;width:5px;height:5px;"></span> TOOS AH' : 'SOO SOCDA'}
+          </span>
+          <span class="map-tag">
+            <svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>
+            ${m.map ?? ''}
+          </span>
+        </div>
+        <div class="match-teams">
+          <div class="mteam">
+            <div class="team-badge">${m.teamA?.badge ?? initials(m.teamA?.name)}</div>
+            <div class="team-name">${m.teamA?.name ?? ''}</div>
+          </div>
+          <div class="score ${aWins ? 'win' : ''}" style="${!aWins && hasScore ? 'color:var(--muted);' : ''} ${!hasScore ? 'color:var(--muted-2);' : ''}">${hasScore ? m.scoreA : '—'}</div>
+          <div class="score ${bWins ? 'win' : ''}" style="${!bWins && hasScore ? 'color:var(--muted);' : ''} ${!hasScore ? 'color:var(--muted-2);' : ''}">${hasScore ? m.scoreB : '—'}</div>
+          <div class="mteam right">
+            <div class="team-badge">${m.teamB?.badge ?? initials(m.teamB?.name)}</div>
+            <div class="team-name">${m.teamB?.name ?? ''}</div>
+          </div>
+        </div>
+        <div class="match-foot">
+          <span><svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M12 2v20M2 12h20"/></svg>TDM · ${m.round ?? ''}</span>
+          <span><svg class="icon" viewBox="0 0 24 24" style="width:12px;height:12px;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${m.eta ?? ''}</span>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+
+  // ==========================================================
+  // 3) TOP 3 PODIUM + SOLO RANKINGS TABLE -> collection: players
+  //    fields: name, team, kills, kd, mvp, matchesPlayed, rank (1 = best)
+  // ==========================================================
+  const playersQ = query(collection(db, 'players'), orderBy('rank', 'asc'));
+  onSnapshot(playersQ, (snap) => {
+    const players = [];
+    snap.forEach(d => players.push(d.data()));
+
+    // ---- podium (top 3) ----
+    const podium = document.getElementById('podium-wrap');
+    podium.innerHTML = '';
+    const rankClass = { 1: 'rank1', 2: 'rank2', 3: 'rank3' };
+    players.slice(0, 3).forEach((p) => {
+      const rc = rankClass[p.rank] || 'rank3';
+      const card = document.createElement('div');
+      card.className = `p-card ${rc}`;
+      card.innerHTML = `
+        <div class="p-rankno">#${p.rank}</div>
+        <div class="p-frame"><div class="p-frame-inner">${p.avatar ?? initials(p.name)}</div></div>
+        <div class="p-name">${p.name ?? ''}</div>
+        <div class="p-team">${p.team ?? ''}</div>
+        <div class="p-stats">
+          <div><div class="v">${p.kills ?? 0}</div><div class="l">Kills</div></div>
+          <div><div class="v">${p.kd ?? 0}</div><div class="l">K/D</div></div>
+        </div>
+      `;
+      podium.appendChild(card);
+    });
+
+    // ---- solo rankings table (all players) ----
+    const tbody = document.getElementById('solo-tbody');
+    tbody.innerHTML = '';
+    const topClass = { 1: 'top1', 2: 'top2', 3: 'top3' };
+    players.forEach((p) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rt-rank ${topClass[p.rank] || ''} mono">${String(p.rank).padStart(2, '0')}</td>
+        <td><div class="rt-entity"><div class="rt-avatar">${p.avatar ?? initials(p.name)}</div><div>${p.name ?? ''}<div class="rt-sub">${p.team ?? ''}</div></div></div></td>
+        <td class="rt-num mono">${p.kills ?? 0}</td>
+        <td class="rt-num mono">${p.kd ?? 0}</td>
+        <td class="rt-num mono">${p.mvp ?? 0}</td>
+        <td class="rt-num mono">${p.matchesPlayed ?? 0}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+  // ==========================================================
+  // 4) TEAM RANKINGS TABLE -> collection: teams
+  //    fields: name, badge, wins, killsTotal, points, matchesPlayed, rank (1 = best)
+  // ==========================================================
+  const teamsQ = query(collection(db, 'teams'), orderBy('rank', 'asc'));
+  onSnapshot(teamsQ, (snap) => {
+    const tbody = document.getElementById('team-tbody');
+    tbody.innerHTML = '';
+    const topClass = { 1: 'top1', 2: 'top2', 3: 'top3' };
+    snap.forEach((docSnap) => {
+      const t = docSnap.data();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rt-rank ${topClass[t.rank] || ''} mono">${String(t.rank).padStart(2, '0')}</td>
+        <td><div class="rt-entity"><div class="rt-avatar">${t.badge ?? initials(t.name)}</div><div>${t.name ?? ''}</div></div></td>
+        <td class="rt-num mono">${t.wins ?? 0}</td>
+        <td class="rt-num mono">${(t.killsTotal ?? 0).toLocaleString('en-US')}</td>
+        <td class="rt-num mono">${t.points ?? 0}</td>
+        <td class="rt-num mono">${t.matchesPlayed ?? 0}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+  // ==========================================================
+  // 5) PAST TOURNAMENTS ACCORDION -> collection: pastTournaments
+  //    fields: title, date (Timestamp or string), teamsCount, winnerTeam,
+  //            matchesPlayed, mvpPlayer, prizePool, order
+  // ==========================================================
+  const pastQ = query(collection(db, 'pastTournaments'), orderBy('order', 'asc'));
+  getDocs(pastQ).then((snap) => {
+    const list = document.getElementById('hist-list');
+    list.innerHTML = '';
+    document.getElementById('hist-count').textContent = `${snap.size} TARTAMO`;
+
+    snap.forEach((docSnap) => {
+      const h = docSnap.data();
+      const dateStr = h.date && typeof h.date.toDate === 'function'
+        ? h.date.toDate().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : (h.date ?? '');
+
+      const item = document.createElement('div');
+      item.className = 'hist-item';
+      item.innerHTML = `
+        <div class="hist-head" data-toggle>
+          <div class="hist-left">
+            <div class="hist-badge"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a2 2 0 0 0 2 4M17 6h3a2 2 0 0 1-2 4"/></svg></div>
+            <div>
+              <div class="hist-title">${h.title ?? ''}</div>
+              <div class="hist-meta">
+                <span><svg class="icon" viewBox="0 0 24 24" style="width:11px;height:11px;"><rect x="3" y="4" width="18" height="17" rx="1"/><path d="M8 2v4M16 2v4M3 9h18"/></svg>${dateStr}</span>
+                <span><svg class="icon" viewBox="0 0 24 24" style="width:11px;height:11px;"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>${h.teamsCount ?? 0} Kooxood</span>
+              </div>
+            </div>
+          </div>
+          <div class="hist-winner"><svg class="icon" viewBox="0 0 24 24" style="width:13px;height:13px;"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4z"/></svg>${h.winnerTeam ?? ''}</div>
+          <svg class="icon chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="hist-body">
+          <div class="hist-body-in">
+            <div class="hist-stat"><div class="v">${h.matchesPlayed ?? 0}</div><div class="l">Kulamo la ciyaaray</div></div>
+            <div class="hist-stat"><div class="v">${h.mvpPlayer ?? ''}</div><div class="l">MVP Ciyaartoy</div></div>
+            <div class="hist-stat"><div class="v">${h.winnerTeam ?? ''}</div><div class="l">Kooxda Guuleysatay</div></div>
+            <div class="hist-stat"><div class="v">${fmtMoney(h.prizePool)}</div><div class="l">Abaalmarinta</div></div>
+          </div>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+  });
+</script>
+
+</body>
+</html>
