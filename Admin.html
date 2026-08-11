@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDM ARENA — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Rubik:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e0a;
+    --bg-2:#0d130e;
+    --panel:#131a13;
+    --panel-2:#181f18;
+    --panel-3:#1c241c;
+    --line:#28312a;
+    --line-soft:#1e261f;
+    --gold:#d9a83c;
+    --gold-dim:#8a7031;
+    --olive:#8a9c5e;
+    --red:#d1442f;
+    --red-dim:#7a2c20;
+    --text:#eef0e6;
+    --muted:#93a08e;
+    --muted-2:#5f6b5c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:linear-gradient(180deg, var(--bg-2), var(--bg) 400px);
+    color:var(--text);
+    font-family:'Rubik', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:'Rajdhani',sans-serif;}
+  .mono{font-family:'Share Tech Mono', monospace;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  input, select{font-family:inherit;}
+
+  /* ============ LOGIN SCREEN ============ */
+  #login-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .login-box{
+    width:100%; max-width:360px; background:var(--panel); border:1px solid var(--line);
+    padding:32px 28px; clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  }
+  .login-mark{
+    width:44px; height:44px; display:grid; place-items:center; margin:0 auto 18px;
+    background:linear-gradient(135deg, var(--gold), #c67c40); color:#141a13;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16px;
+  }
+  .login-box h1{
+    font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; letter-spacing:0.04em;
+    text-transform:uppercase; text-align:center;
+  }
+  .login-box p.sub{color:var(--muted-2); font-size:12px; text-align:center; margin-top:4px; letter-spacing:0.06em;}
+  .field{margin-top:18px;}
+  .field label{
+    display:block; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted-2);
+    margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%; background:var(--bg-2); border:1px solid var(--line); color:var(--text);
+    padding:10px 12px; font-size:14px; border-radius:2px; outline:none; transition:border-color .15s ease;
+  }
+  .field input:focus, .field select:focus{border-color:var(--gold-dim);}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.04em;
+    text-transform:uppercase; border:1px solid var(--gold-dim); background:var(--gold); color:#141a13;
+    padding:10px 18px; border-radius:2px; transition:filter .15s ease;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{filter:brightness(0.95);}
+  .btn.block{width:100%;}
+  .btn.ghost{background:transparent; color:var(--text); border-color:var(--line);}
+  .btn.ghost:hover{background:var(--panel-2); border-color:var(--gold-dim);}
+  .btn.danger{background:transparent; color:#ff8770; border-color:var(--red);}
+  .btn.danger:hover{background:rgba(209,68,47,0.12);}
+  .btn.small{padding:6px 12px; font-size:12px;}
+  .login-error{
+    margin-top:14px; font-size:12.5px; color:#ff8770; background:rgba(209,68,47,0.1);
+    border:1px solid var(--red-dim); padding:8px 10px; border-radius:2px; display:none;
+  }
+
+  /* ============ APP SHELL ============ */
+  #app-shell{display:none; min-height:100vh;}
+  #app-shell.active{display:flex;}
+
+  .sidebar{
+    width:220px; flex:none; background:var(--panel); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .side-brand{padding:20px 18px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; gap:10px;}
+  .side-brand .mark{
+    width:30px; height:30px; display:grid; place-items:center; flex:none;
+    background:linear-gradient(135deg, var(--gold), #c67c40); color:#141a13;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+  .side-brand .t1{font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.05em; line-height:1;}
+  .side-brand .t2{font-size:9px; color:var(--muted-2); letter-spacing:0.15em; text-transform:uppercase; margin-top:2px;}
+
+  .side-nav{flex:1; padding:14px 10px; display:flex; flex-direction:column; gap:2px; overflow-y:auto;}
+  .side-nav button{
+    display:flex; align-items:center; gap:10px; text-align:left; width:100%;
+    background:transparent; border:none; color:var(--muted); padding:10px 12px; border-radius:2px;
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; letter-spacing:0.02em;
+    transition:all .15s ease; border-left:2px solid transparent;
+  }
+  .side-nav button:hover{background:var(--panel-2); color:var(--text);}
+  .side-nav button.active{background:var(--panel-2); color:var(--gold); border-left-color:var(--gold);}
+  .side-nav .icon{width:15px; height:15px; flex:none; stroke:currentColor; fill:none; stroke-width:1.8;}
+
+  .side-foot{padding:14px; border-top:1px solid var(--line-soft);}
+  .side-user{font-size:11.5px; color:var(--muted-2); margin-bottom:10px; word-break:break-all;}
+
+  .main{flex:1; min-width:0; padding:28px 32px;}
+  .main-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;}
+  .main-head h2{font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase;}
+  .main-head p{font-size:12.5px; color:var(--muted-2); margin-top:3px;}
+
+  .status-msg{
+    font-size:12.5px; padding:9px 12px; border-radius:2px; margin-bottom:16px; display:none;
+  }
+  .status-msg.show{display:block;}
+  .status-msg.ok{background:rgba(138,156,94,0.12); border:1px solid var(--olive); color:#c3d6a0;}
+  .status-msg.err{background:rgba(209,68,47,0.1); border:1px solid var(--red-dim); color:#ff8770;}
+
+  /* ============ TABLE ============ */
+  .table-wrap{background:var(--panel); border:1px solid var(--line); overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; min-width:640px;}
+  thead th{
+    text-align:left; font-family:'Share Tech Mono',monospace; font-size:10.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--muted-2); padding:12px 14px; border-bottom:1px solid var(--line);
+    background:var(--panel-2); white-space:nowrap;
+  }
+  tbody td{padding:11px 14px; border-bottom:1px solid var(--line-soft); font-size:13.5px; white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--panel-2);}
+  td.actions{display:flex; gap:8px;}
+  .empty-row td{color:var(--muted-2); text-align:center; padding:32px 14px; font-size:13px;}
+
+  /* singleton (tournamentMeta) card form */
+  .singleton-card{background:var(--panel); border:1px solid var(--line); padding:24px; max-width:520px;}
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .form-grid .field.full{grid-column:1 / -1;}
+
+  /* ============ MODAL ============ */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(6,8,6,0.72); backdrop-filter:blur(2px);
+    align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line-soft);
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  }
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between; padding:18px 22px;
+    border-bottom:1px solid var(--line-soft); background:var(--panel-2);
+  }
+  .modal-head h3{font-family:'Rajdhani',sans-serif; font-size:17px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase;}
+  .modal-close{background:transparent; border:none; color:var(--muted); font-size:20px; line-height:1; padding:4px;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:20px 22px;}
+  .modal-foot{display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--line-soft);}
+
+  @media (max-width:760px){
+    #app-shell.active{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto;}
+    .side-brand{border-bottom:none; border-right:1px solid var(--line-soft);}
+    .side-nav{flex-direction:row;}
+    .side-foot{display:none;}
+    .main{padding:20px;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-mark">TA</div>
+    <h1>TDM Arena Admin</h1>
+    <p class="sub">Sign in to manage tournament data</p>
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn block" style="margin-top:22px;">Log In</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app-shell">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="mark">TA</div>
+      <div>
+        <div class="t1">TDM ARENA</div>
+        <div class="t2">Admin Panel</div>
+      </div>
+    </div>
+    <nav class="side-nav" id="side-nav">
+      <!-- populated by JS from COLLECTION config -->
+    </nav>
+    <div class="side-foot">
+      <div class="side-user" id="side-user">—</div>
+      <button class="btn ghost block small" id="logout-btn">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="main-head">
+      <div>
+        <h2 id="main-title">—</h2>
+        <p id="main-sub"></p>
+      </div>
+      <button class="btn" id="add-new-btn">+ Add New</button>
+    </div>
+
+    <div class="status-msg" id="status-msg"></div>
+
+    <!-- table view for regular collections -->
+    <div class="table-wrap" id="table-wrap" style="display:none;">
+      <table>
+        <thead><tr id="table-head-row"></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- singleton view for tournamentMeta -->
+    <div class="singleton-card" id="singleton-wrap" style="display:none;">
+      <div class="form-grid" id="singleton-form"></div>
+      <button class="btn" id="singleton-save-btn" style="margin-top:20px;">Save Changes</button>
+    </div>
+  </main>
+</div>
+
+<!-- ================= MODAL (Add / Edit) ================= -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modal-title">Add Document</h3>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" id="modal-form"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="modal-cancel">Cancel</button>
+      <button class="btn" id="modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc,
+    query, orderBy, Timestamp
+  } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  // ---------------------------------------------------------------
+  // FIREBASE CONFIG
+  // ---------------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyC64H11C2iFqzikCPrlIhsXxVkfVNQhYq8",
+    authDomain: "uc-store-6609b.firebaseapp.com",
+    projectId: "uc-store-6609b",
+    storageBucket: "uc-store-6609b.firebasestorage.app",
+    messagingSenderId: "852223956045",
+    appId: "1:852223956045:web:477bf484e5de011f383804"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ---------------------------------------------------------------
+  // COLLECTION SCHEMA CONFIG — edit this to add/change fields
+  // ---------------------------------------------------------------
+  // field.type: 'text' | 'number' | 'select' | 'datetime' | 'date'
+  // field.key : dot-path supports nested objects, e.g. 'teamA.name'
+  const COLLECTIONS = {
+    matches: {
+      label: 'Matches',
+      icon: 'M4 4h16v16H4z M4 12h16 M12 4v16',
+      orderField: 'order',
+      columns: [
+        { key: 'teamA.name', label: 'Team A' },
+        { key: 'teamB.name', label: 'Team B' },
+        { key: 'scoreA', label: 'Score A' },
+        { key: 'scoreB', label: 'Score B' },
+        { key: 'status', label: 'Status' },
+        { key: 'map', label: 'Map' },
+        { key: 'order', label: 'Order' },
+      ],
+      fields: [
+        { key: 'teamA.name', label: 'Team A Name', type: 'text' },
+        { key: 'teamA.badge', label: 'Team A Badge', type: 'text' },
+        { key: 'teamB.name', label: 'Team B Name', type: 'text' },
+        { key: 'teamB.badge', label: 'Team B Badge', type: 'text' },
+        { key: 'scoreA', label: 'Score A', type: 'number' },
+        { key: 'scoreB', label: 'Score B', type: 'number' },
+        { key: 'status', label: 'Status', type: 'select', options: ['live', 'soon'] },
+        { key: 'map', label: 'Map', type: 'text' },
+        { key: 'round', label: 'Round', type: 'text' },
+        { key: 'eta', label: 'ETA', type: 'text' },
+        { key: 'order', label: 'Order', type: 'number' },
+      ]
+    },
+    players: {
+      label: 'Players',
+      icon: 'M12 8a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21c0-4 3.5-7 8-7s8 3 8 7',
+      orderField: 'rank',
+      columns: [
+        { key: 'rank', label: 'Rank' },
+        { key: 'name', label: 'Name' },
+        { key: 'team', label: 'Team' },
+        { key: 'kills', label: 'Kills' },
+        { key: 'kd', label: 'K/D' },
+        { key: 'mvp', label: 'MVP' },
+      ],
+      fields: [
+        { key: 'rank', label: 'Rank', type: 'number' },
+        { key: 'name', label: 'Player Name', type: 'text' },
+        { key: 'team', label: 'Team', type: 'text' },
+        { key: 'avatar', label: 'Avatar (2-letter tag)', type: 'text' },
+        { key: 'kills', label: 'Kills', type: 'number' },
+        { key: 'kd', label: 'K/D', type: 'number' },
+        { key: 'mvp', label: 'MVP Count', type: 'number' },
+        { key: 'matchesPlayed', label: 'Matches Played', type: 'number' },
+      ]
+    },
+    teams: {
+      label: 'Teams',
+      icon: 'M8 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M17 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6',
+      orderField: 'rank',
+      columns: [
+        { key: 'rank', label: 'Rank' },
+        { key: 'name', label: 'Name' },
+        { key: 'wins', label: 'Wins' },
+        { key: 'killsTotal', label: 'Kills Total' },
+        { key: 'points', label: 'Points' },
+      ],
+      fields: [
+        { key: 'rank', label: 'Rank', type: 'number' },
+        { key: 'name', label: 'Team Name', type: 'text' },
+        { key: 'badge', label: 'Badge (2-letter tag)', type: 'text' },
+        { key: 'wins', label: 'Wins', type: 'number' },
+        { key: 'killsTotal', label: 'Kills Total', type: 'number' },
+        { key: 'points', label: 'Points', type: 'number' },
+        { key: 'matchesPlayed', label: 'Matches Played', type: 'number' },
+      ]
+    },
+    pastTournaments: {
+      label: 'Past Tournaments',
+      icon: 'M3 12a9 9 0 1 0 3-6.7 M3 5v5h5 M12 7v5l3 3',
+      orderField: 'order',
+      columns: [
+        { key: 'order', label: 'Order' },
+        { key: 'title', label: 'Title' },
+        { key: 'date', label: 'Date', isTimestamp: true },
+        { key: 'winnerTeam', label: 'Winner' },
+        { key: 'teamsCount', label: 'Teams' },
+      ],
+      fields: [
+        { key: 'order', label: 'Order', type: 'number' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'date', label: 'Date', type: 'date' },
+        { key: 'teamsCount', label: 'Teams Count', type: 'number' },
+        { key: 'winnerTeam', label: 'Winner Team', type: 'text' },
+        { key: 'matchesPlayed', label: 'Matches Played', type: 'number' },
+        { key: 'mvpPlayer', label: 'MVP Player', type: 'text' },
+        { key: 'prizePool', label: 'Prize Pool', type: 'number' },
+      ]
+    },
+    tournamentMeta: {
+      label: 'Tournament Meta',
+      icon: 'M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z',
+      singleton: true,
+      docId: 'current',
+      fields: [
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'subtitle', label: 'Subtitle', type: 'text', full: true },
+        { key: 'activeTeams', label: 'Active Teams', type: 'number' },
+        { key: 'prizePool', label: 'Prize Pool', type: 'number' },
+        { key: 'nextMap', label: 'Next Map', type: 'text' },
+        { key: 'countdownTarget', label: 'Countdown Target', type: 'datetime', full: true },
+      ]
+    }
+  };
+
+  const ICON_WRAP = (d) => `<svg class="icon" viewBox="0 0 24 24"><path d="${d}"/></svg>`;
+
+  // ---------------------------------------------------------------
+  // small path helpers (support nested keys like "teamA.name")
+  // ---------------------------------------------------------------
+  function getNested(obj, path) {
+    return path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+  }
+  function setNested(obj, path, value) {
+    const parts = path.split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      cur[parts[i]] = cur[parts[i]] || {};
+      cur = cur[parts[i]];
+    }
+    cur[parts[parts.length - 1]] = value;
+  }
+
+  // ---------------------------------------------------------------
+  // AUTH
+  // ---------------------------------------------------------------
+  const loginScreen = document.getElementById('login-screen');
+  const appShell = document.getElementById('app-shell');
+  const loginForm = document.getElementById('login-form');
+  const loginError = document.getElementById('login-error');
+  const sideUser = document.getElementById('side-user');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.style.display = 'none';
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      loginError.textContent = friendlyAuthError(err.code);
+      loginError.style.display = 'block';
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+  function friendlyAuthError(code) {
+    switch (code) {
+      case 'auth/invalid-email': return 'That email address looks invalid.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential': return 'Incorrect email or password.';
+      case 'auth/too-many-requests': return 'Too many attempts. Try again shortly.';
+      default: return 'Login failed. Please try again.';
+    }
+  }
+
+  let activeUnsubscribes = [];
+  function clearListeners() {
+    activeUnsubscribes.forEach(u => u());
+    activeUnsubscribes = [];
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginScreen.style.display = 'none';
+      appShell.classList.add('active');
+      sideUser.textContent = user.email;
+      initNav();
+      selectCollection(currentKey || Object.keys(COLLECTIONS)[0]);
+    } else {
+      appShell.classList.remove('active');
+      loginScreen.style.display = 'flex';
+      clearListeners();
+      loginForm.reset();
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // SIDEBAR NAV
+  // ---------------------------------------------------------------
+  const sideNav = document.getElementById('side-nav');
+  let currentKey = null;
+  let navBuilt = false;
+
+  function initNav() {
+    if (navBuilt) return;
+    navBuilt = true;
+    Object.entries(COLLECTIONS).forEach(([key, cfg]) => {
+      const btn = document.createElement('button');
+      btn.dataset.key = key;
+      btn.innerHTML = `${ICON_WRAP(cfg.icon)}<span>${cfg.label}</span>`;
+      btn.addEventListener('click', () => selectCollection(key));
+      sideNav.appendChild(btn);
+    });
+  }
+
+  function selectCollection(key) {
+    currentKey = key;
+    document.querySelectorAll('#side-nav button').forEach(b => {
+      b.classList.toggle('active', b.dataset.key === key);
+    });
+    const cfg = COLLECTIONS[key];
+    document.getElementById('main-title').textContent = cfg.label;
+    document.getElementById('main-sub').textContent = cfg.singleton
+      ? 'Single settings document (id: ' + cfg.docId + ')'
+      : `Collection: ${key}`;
+    hideStatus();
+
+    clearListeners();
+
+    if (cfg.singleton) {
+      document.getElementById('table-wrap').style.display = 'none';
+      document.getElementById('singleton-wrap').style.display = 'block';
+      document.getElementById('add-new-btn').style.display = 'none';
+      renderSingleton(key, cfg);
+    } else {
+      document.getElementById('singleton-wrap').style.display = 'none';
+      document.getElementById('table-wrap').style.display = 'block';
+      document.getElementById('add-new-btn').style.display = 'inline-flex';
+      renderTable(key, cfg);
+    }
+  }
+
+  document.getElementById('add-new-btn').addEventListener('click', () => {
+    if (!currentKey) return;
+    openModal(currentKey, null, null);
+  });
+
+  // ---------------------------------------------------------------
+  // STATUS MESSAGE
+  // ---------------------------------------------------------------
+  const statusMsg = document.getElementById('status-msg');
+  function showStatus(text, type = 'ok') {
+    statusMsg.textContent = text;
+    statusMsg.className = `status-msg show ${type}`;
+    clearTimeout(showStatus._t);
+    showStatus._t = setTimeout(hideStatus, 3500);
+  }
+  function hideStatus() {
+    statusMsg.className = 'status-msg';
+  }
+
+  // ---------------------------------------------------------------
+  // TABLE RENDER (real-time)
+  // ---------------------------------------------------------------
+  function renderTable(key, cfg) {
+    const headRow = document.getElementById('table-head-row');
+    const body = document.getElementById('table-body');
+    headRow.innerHTML = cfg.columns.map(c => `<th>${c.label}</th>`).join('') + '<th>Actions</th>';
+    body.innerHTML = `<tr class="empty-row"><td colspan="${cfg.columns.length + 1}">Loading…</td></tr>`;
+
+    const colRef = collection(db, key);
+    const q = cfg.orderField ? query(colRef, orderBy(cfg.orderField, 'asc')) : colRef;
+
+    const unsub = onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        body.innerHTML = `<tr class="empty-row"><td colspan="${cfg.columns.length + 1}">No documents yet — click "Add New" to create one.</td></tr>`;
+        return;
+      }
+      body.innerHTML = '';
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const tr = document.createElement('tr');
+        const cells = cfg.columns.map(c => {
+          let val = getNested(data, c.key);
+          if (c.isTimestamp && val && typeof val.toDate === 'function') {
+            val = val.toDate().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          }
+          return `<td>${val !== undefined && val !== null ? escapeHtml(String(val)) : '—'}</td>`;
+        }).join('');
+        tr.innerHTML = `
+          ${cells}
+          <td class="actions">
+            <button class="btn ghost small edit-btn">Edit</button>
+            <button class="btn danger small del-btn">Delete</button>
+          </td>
+        `;
+        tr.querySelector('.edit-btn').addEventListener('click', () => openModal(key, docSnap.id, data));
+        tr.querySelector('.del-btn').addEventListener('click', () => confirmDelete(key, docSnap.id));
+        body.appendChild(tr);
+      });
+    }, (err) => {
+      body.innerHTML = `<tr class="empty-row"><td colspan="${cfg.columns.length + 1}">Error loading data: ${escapeHtml(err.message)}</td></tr>`;
+    });
+
+    activeUnsubscribes.push(unsub);
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  }
+
+  async function confirmDelete(key, id) {
+    if (!confirm('Delete this document? This cannot be undone.')) return;
+    try {
+      await deleteDoc(doc(db, key, id));
+      showStatus('Document deleted.', 'ok');
+    } catch (err) {
+      showStatus('Delete failed: ' + err.message, 'err');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // FIELD INPUT BUILDER (shared by modal + singleton form)
+  // ---------------------------------------------------------------
+  function buildFieldHtml(field, value) {
+    const idAttr = `data-field="${field.key}"`;
+    const fullClass = field.full ? ' full' : '';
+    let inputHtml = '';
+
+    if (field.type === 'select') {
+      const opts = field.options.map(o => `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`).join('');
+      inputHtml = `<select ${idAttr}>${opts}</select>`;
+    } else if (field.type === 'number') {
+      const v = (value !== undefined && value !== null) ? value : '';
+      inputHtml = `<input type="number" step="any" ${idAttr} value="${v}">`;
+    } else if (field.type === 'datetime') {
+      const v = tsToDatetimeLocal(value);
+      inputHtml = `<input type="datetime-local" ${idAttr} value="${v}">`;
+    } else if (field.type === 'date') {
+      const v = tsToDateInput(value);
+      inputHtml = `<input type="date" ${idAttr} value="${v}">`;
+    } else {
+      const v = value !== undefined && value !== null ? String(value).replace(/"/g, '&quot;') : '';
+      inputHtml = `<input type="text" ${idAttr} value="${v}">`;
+    }
+
+    return `<div class="field${fullClass}"><label>${field.label}</label>${inputHtml}</div>`;
+  }
+
+  function tsToDatetimeLocal(ts) {
+    if (!ts) return '';
+    const d = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+    if (isNaN(d)) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function tsToDateInput(ts) {
+    if (!ts) return '';
+    const d = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+    if (isNaN(d)) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function readFormValues(container, fields) {
+    const out = {};
+    fields.forEach((field) => {
+      const input = container.querySelector(`[data-field="${field.key}"]`);
+      if (!input) return;
+      let val = input.value;
+      if (field.type === 'number') {
+        val = val === '' ? null : Number(val);
+      } else if (field.type === 'datetime') {
+        val = val ? Timestamp.fromDate(new Date(val)) : null;
+      } else if (field.type === 'date') {
+        val = val ? Timestamp.fromDate(new Date(val + 'T00:00:00')) : null;
+      }
+      setNested(out, field.key, val);
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------
+  // SINGLETON (tournamentMeta) FORM
+  // ---------------------------------------------------------------
+  function renderSingleton(key, cfg) {
+    const formEl = document.getElementById('singleton-form');
+    const docRef = doc(db, key, cfg.docId);
+
+    const unsub = onSnapshot(docRef, (snap) => {
+      const data = snap.exists() ? snap.data() : {};
+      formEl.innerHTML = cfg.fields.map(f => buildFieldHtml(f, getNested(data, f.key))).join('');
+    }, (err) => {
+      formEl.innerHTML = `<div class="field full">Error: ${escapeHtml(err.message)}</div>`;
+    });
+    activeUnsubscribes.push(unsub);
+
+    const saveBtn = document.getElementById('singleton-save-btn');
+    saveBtn.onclick = async () => {
+      try {
+        const values = readFormValues(formEl, cfg.fields);
+        await setDoc(docRef, values, { merge: true });
+        showStatus('Tournament meta saved.', 'ok');
+      } catch (err) {
+        showStatus('Save failed: ' + err.message, 'err');
+      }
+    };
+  }
+
+  // ---------------------------------------------------------------
+  // MODAL (Add / Edit for regular collections)
+  // ---------------------------------------------------------------
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalTitle = document.getElementById('modal-title');
+  const modalForm = document.getElementById('modal-form');
+  const modalSave = document.getElementById('modal-save');
+
+  let modalState = { key: null, id: null };
+
+  function openModal(key, id, data) {
+    const cfg = COLLECTIONS[key];
+    modalState = { key, id };
+    modalTitle.textContent = id ? `Edit ${cfg.label.replace(/s$/, '')}` : `Add ${cfg.label.replace(/s$/, '')}`;
+    modalForm.innerHTML = cfg.fields.map(f => buildFieldHtml(f, data ? getNested(data, f.key) : undefined)).join('');
+    modalOverlay.classList.add('show');
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('show');
+    modalState = { key: null, id: null };
+  }
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+  modalSave.addEventListener('click', async () => {
+    const { key, id } = modalState;
+    if (!key) return;
+    const cfg = COLLECTIONS[key];
+    try {
+      const values = readFormValues(modalForm, cfg.fields);
+      if (id) {
+        await updateDoc(doc(db, key, id), values);
+        showStatus('Document updated.', 'ok');
+      } else {
+        await addDoc(collection(db, key), values);
+        showStatus('Document added.', 'ok');
+      }
+      closeModal();
+    } catch (err) {
+      showStatus('Save failed: ' + err.message, 'err');
+    }
+  });
+</script>
+</body>
+</html>
+
